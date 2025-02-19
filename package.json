@@ -1,0 +1,26 @@
+{
+	"name": "advanced_todo_list",
+	"version": "1.0.0",
+	"main": "server.js",
+	"type": "module",
+	"scripts": {
+		"test": "jest --detectOpenHandles --forceExit",
+		"dev": "node --watch server.js"
+	},
+	"keywords": [],
+	"author": "hphats <phatlee1104@gmail.com>",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"bcryptjs": "^3.0.1",
+		"dotenv": "^16.4.7",
+		"express": "^4.21.2",
+		"jsonwebtoken": "^9.0.2",
+		"mongoose": "^8.10.1"
+	},
+	"devDependencies": {
+		"compression": "^1.8.0",
+		"helmet": "^8.0.0",
+		"morgan": "^1.10.0"
+	}
+}
