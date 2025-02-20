@@ -10,16 +10,21 @@ router.post("/sign-in", async (req, res, next) => {
 	try {
 		const { email, password } = req.body;
 
+		// Check data exist
+		if (!email)
+			return res.status(400).json({ message: "Email field is missing" });
+
+		if (!password)
+			return res.status(400).json({ message: "Password field is missing" });
+
 		// Check exist user
 		const user = await User.findOne({ email });
-		if (!user)
-			return res
-				.status(400)
-				.json({ message: "User doesn't exist! Please create new user" });
+		if (!user) return res.status(400).json({ message: "User not found!" });
 
 		// Compare password
 		const isMatch = await bcrypt.compare(password, user.password);
-		if (!isMatch) return res.status(400).json({ message: "Invalid password!" });
+		if (!isMatch)
+			return res.status(401).json({ message: "Invalid credentials!" });
 
 		// Create token
 		// TODO: error handling for jwt secret key
@@ -41,6 +46,16 @@ router.post("/sign-in", async (req, res, next) => {
 router.post("/sign-up", async (req, res, next) => {
 	try {
 		const { username, email, password } = req.body;
+
+		if (!username)
+			return res.status(400).json({ message: "Username field is missing" });
+
+		// Check data exist
+		if (!email)
+			return res.status(400).json({ message: "Email field is missing" });
+
+		if (!password)
+			return res.status(400).json({ message: "Password field is missing" });
 
 		// Check user exist
 		const existUser = await User.findOne({ email });
