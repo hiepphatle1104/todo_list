@@ -41,7 +41,7 @@ router.post("/", async (req, res, next) => {
 		const task = new Task({ ...req.body, userId: req.userId });
 		await task.save();
 
-		res.status(200).json({ message: "Task is created!" });
+		res.status(201).json({ message: "Task is created!" });
 	} catch (error) {
 		next(error);
 	}

@@ -10,7 +10,7 @@ router.post("/sign-in", async (req, res, next) => {
 	try {
 		// Validate data
 		const validate = await signInValidate.safeParseAsync(req.body);
-		if (!validate.success) throw new AppError("Missing some fields!", 400);
+		if (!validate.success) throw new AppError("Validate failed!", 400);
 
 		const { email, password } = req.body;
 
@@ -40,7 +40,7 @@ router.post("/sign-up", async (req, res, next) => {
 	try {
 		// Validate data
 		const validate = await signUpValidate.safeParseAsync(req.body);
-		if (!validate.success) throw new AppError("Missing some fields!", 400);
+		if (!validate.success) throw new AppError("Validate failed!", 400);
 
 		const { email } = req.body;
 

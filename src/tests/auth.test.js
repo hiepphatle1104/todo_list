@@ -1,19 +1,11 @@
 import request from "supertest";
 import app from "../app.js";
 import mongoose from "mongoose";
-import User from "../models/User.js";
 
-describe("Login Route", () => {
+describe("Authentication Testing Tool", () => {
+	// Connect to database
 	beforeAll(async () => {
-		// Connect to database
 		await mongoose.connect(process.env.MONGO_URI);
-
-		// Create test user
-		await User.create({
-			username: "tester",
-			email: "tester@gmail.com",
-			password: "password123",
-		});
 	});
 
 	afterAll(async () => {
@@ -21,49 +13,163 @@ describe("Login Route", () => {
 		await mongoose.connection.close();
 	});
 
-	test("Đăng nhập thành công và trả về token", async () => {
-		const res = await request(app)
-			.post("/api/auth/sign-in")
-			.send({ email: "tester@gmail.com", password: "password123" });
+	// Sign up route
+	describe("Sign-up Route", () => {
+		// Validate data
+		describe("Missing fields", () => {
+			// Missing username
+			test("Missing username field", async () => {
+				const res = await request(app).post("/api/auth/sign-up").send({
+					email: "phatlee1104@gmail.com",
+					password: "phat12312@P",
+				});
 
-		expect(res.status).toBe(200);
-		expect(res.body).toHaveProperty("token");
-		expect(res.body.message).toBe("Sign in successfully!");
+				expect(res.status).toBe(400);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toBe("Validate failed!");
+			});
+
+			// Missing email
+			test("Missing email field", async () => {
+				const res = await request(app).post("/api/auth/sign-up").send({
+					username: "hphats",
+					password: "phat12312@P",
+				});
+
+				expect(res.status).toBe(400);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toBe("Validate failed!");
+			});
+
+			// Missing password
+			test("Missing password field", async () => {
+				const res = await request(app).post("/api/auth/sign-up").send({
+					username: "hphats",
+					email: "phatlee1104@gmail.com",
+				});
+
+				expect(res.status).toBe(400);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toBe("Validate failed!");
+			});
+
+			// Missing character
+			test("Missing character", async () => {
+				const res = await request(app).post("/api/auth/sign-up").send({
+					username: "h",
+					email: "phatlee1104@gmail.com",
+					password: "phat12312@P",
+				});
+
+				expect(res.status).toBe(400);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toBe("Validate failed!");
+			});
+		});
+
+		describe("Account", () => {
+			// Create account
+			test("Create account", async () => {
+				const res = await request(app).post("/api/auth/sign-up").send({
+					username: "hphats",
+					email: "phatlee1104@gmail.com",
+					password: "phat12312@P",
+				});
+
+				expect(res.status).toBe(201);
+				expect(res.body.message).toBe("User is created!");
+			});
+
+			// User exist
+			test("User exist", async () => {
+				const res = await request(app).post("/api/auth/sign-up").send({
+					username: "hphats",
+					email: "phatlee1104@gmail.com",
+					password: "phat12312@P",
+				});
+
+				expect(res.status).toBe(400);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toBe("User already exist!");
+			});
+		});
 	});
 
-	test("Sai mật khẩu và trả về lỗi", async () => {
-		const res = await request(app)
-			.post("/api/auth/sign-in")
-			.send({ email: "tester@gmail.com", password: "wrongpass" });
+	// Sign in route
+	describe("Sign-in Route", () => {
+		// Missing fields
+		describe("Missing fields", () => {
+			// Missing email
+			test("Missing email field", async () => {
+				const res = await request(app).post("/api/auth/sign-in").send({
+					password: "phat12312@P",
+				});
 
-		expect(res.status).toBe(401);
-		expect(res.body.message).toBe("Invalid credentials!");
-	});
+				expect(res.status).toBe(400);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toBe("Validate failed!");
+			});
 
-	test("Tài khoản không tồn tại", async () => {
-		const res = await request(app)
-			.post("/api/auth/sign-in")
-			.send({ email: "tester1@gmail.com", password: "password123" });
+			// Missing password
+			test("Missing password field", async () => {
+				const res = await request(app).post("/api/auth/sign-in").send({
+					email: "phatlee1104@gmail.com",
+				});
 
-		expect(res.status).toBe(400);
-		expect(res.body.message).toBe("User not found!");
-	});
+				expect(res.status).toBe(400);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toBe("Validate failed!");
+			});
 
-	test("Thiếu mail", async () => {
-		const res = await request(app)
-			.post("/api/auth/sign-in")
-			.send({ password: "password123" });
+			// Missing character
+			test("Missing character field", async () => {
+				const res = await request(app).post("/api/auth/sign-in").send({
+					email: "phatlee1104@gmail.com",
+					password: "pha",
+				});
 
-		expect(res.status).toBe(400);
-		expect(res.body.message).toBe("Email field is missing");
-	});
+				expect(res.status).toBe(400);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toBe("Validate failed!");
+			});
+		});
 
-	test("Thiếu password", async () => {
-		const res = await request(app)
-			.post("/api/auth/sign-in")
-			.send({ email: "tester1@mail.com" });
+		// Account
+		describe("Account", () => {
+			// User not exist
+			test("User not exist", async () => {
+				const res = await request(app).post("/api/auth/sign-in").send({
+					email: "tester@gmail.com",
+					password: "tester@P",
+				});
 
-		expect(res.status).toBe(400);
-		expect(res.body.message).toBe("Password field is missing");
+				expect(res.status).toBe(404);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toBe("User not found!");
+			});
+
+			// Wrong password
+			test("Wrong password", async () => {
+				const res = await request(app).post("/api/auth/sign-in").send({
+					email: "phatlee1104@gmail.com",
+					password: "phat12312",
+				});
+
+				expect(res.status).toBe(400);
+				expect(res.body.success).toBe(false);
+				expect(res.body.message).toBe("Invalid credentials!");
+			});
+
+			// Success
+			test("Success sign in", async () => {
+				const res = await request(app).post("/api/auth/sign-in").send({
+					email: "phatlee1104@gmail.com",
+					password: "phat12312@P",
+				});
+				expect(res.status).toBe(200);
+				expect(res.body.token).toBeDefined();
+				expect(res.body.message).toBe("Sign in successfully!");
+			});
+		});
 	});
 });
