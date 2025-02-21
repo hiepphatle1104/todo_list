@@ -12,8 +12,6 @@ router.get("/", async (req, res, next) => {
 
 		if (!user) return res.status(404).json({ message: "Data not found!" });
 
-		// TODO: User tasks
-
 		res.status(200).json({ user, tasks });
 	} catch (error) {
 		next(error);

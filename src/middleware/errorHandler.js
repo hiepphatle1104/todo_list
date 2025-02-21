@@ -5,4 +5,11 @@ const errorHandler = (err, req, res, next) => {
 	});
 };
 
-export default errorHandler;
+class AppError extends Error {
+	constructor(message, status) {
+		super(message);
+		this.status = status;
+	}
+}
+
+export { errorHandler, AppError };

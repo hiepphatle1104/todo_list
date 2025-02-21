@@ -4,7 +4,7 @@ import morgan from "morgan";
 import compression from "compression";
 import helmet from "helmet";
 import dbConnect from "./database/db.js";
-import errorHandler from "./middleware/errorHandler.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 import routes from "./routes/init.js";
 
 // Initialize app

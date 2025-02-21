@@ -4,14 +4,12 @@ import mongoose from "mongoose";
 import User from "../models/User.js";
 
 describe("Login Route", () => {
-	let testUser;
-
 	beforeAll(async () => {
 		// Connect to database
 		await mongoose.connect(process.env.MONGO_URI);
 
 		// Create test user
-		testUser = await User.create({
+		await User.create({
 			username: "tester",
 			email: "tester@gmail.com",
 			password: "password123",

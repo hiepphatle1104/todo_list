@@ -1,36 +1,29 @@
 import { Router } from "express";
 import User from "../models/User.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { signInValidate, signUpValidate } from "../utils/validate.data.js";
+import { AppError } from "../middleware/errorHandler.js";
 
 const router = Router();
 
 // Sign in
 router.post("/sign-in", async (req, res, next) => {
 	try {
+		// Validate data
+		const validate = await signInValidate.safeParseAsync(req.body);
+		if (!validate.success) throw new AppError("Missing some fields!", 400);
+
 		const { email, password } = req.body;
-
-		// Check data exist
-		if (!email)
-			return res.status(400).json({ message: "Email field is missing" });
-
-		if (!password)
-			return res.status(400).json({ message: "Password field is missing" });
 
 		// Check exist user
 		const user = await User.findOne({ email });
-		if (!user) return res.status(400).json({ message: "User not found!" });
+		if (!user) throw new AppError("User not found!", 404);
 
 		// Compare password
-		const isMatch = await bcrypt.compare(password, user.password);
-		if (!isMatch)
-			return res.status(401).json({ message: "Invalid credentials!" });
+		await user.comparePassword(password);
 
 		// Create token
 		// TODO: error handling for jwt secret key
-		const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-			expiresIn: "1h",
-		});
+		const token = user.createToken();
 
 		// Return token, user
 		res.status(200).json({
@@ -45,30 +38,18 @@ router.post("/sign-in", async (req, res, next) => {
 // Sign up
 router.post("/sign-up", async (req, res, next) => {
 	try {
-		const { username, email, password } = req.body;
+		// Validate data
+		const validate = await signUpValidate.safeParseAsync(req.body);
+		if (!validate.success) throw new AppError("Missing some fields!", 400);
 
-		if (!username)
-			return res.status(400).json({ message: "Username field is missing" });
-
-		// Check data exist
-		if (!email)
-			return res.status(400).json({ message: "Email field is missing" });
-
-		if (!password)
-			return res.status(400).json({ message: "Password field is missing" });
+		const { email } = req.body;
 
 		// Check user exist
 		const existUser = await User.findOne({ email });
-		if (existUser)
-			return res.status(400).json({ message: "User already exist!" });
+		if (existUser) throw new AppError("User already exist!", 400);
 
 		// Create new user
-		const user = new User({
-			username,
-			email,
-			password,
-		});
-
+		const user = new User(req.body);
 		await user.save();
 
 		res.status(201).json({ message: "User is created!" });

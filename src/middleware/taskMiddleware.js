@@ -9,7 +9,7 @@ const taskMiddleware = async (req, res, next) => {
 	if (task.userId.toString() !== req.userId)
 		return res.status(406).json({ message: "This is not your task" });
 
-	req.task = task;
+	req.taskId = task._id;
 	next();
 };
 

@@ -1,6 +1,8 @@
 import { Router } from "express";
 import Task from "../models/Task.js";
 import taskMiddleware from "../middleware/taskMiddleware.js";
+import { taskValidate } from "../utils/validate.data.js";
+import { AppError } from "../middleware/errorHandler.js";
 
 const router = Router();
 
@@ -21,7 +23,8 @@ router.get("/", async (req, res, next) => {
 // Get task by id
 router.get("/:id", taskMiddleware, async (req, res, next) => {
 	try {
-		res.status(200).json(req.task);
+		const task = await Task.findById({ _id: req.taskId }).select("-userId");
+		res.status(200).json(task);
 	} catch (error) {
 		next(error);
 	}
@@ -30,16 +33,12 @@ router.get("/:id", taskMiddleware, async (req, res, next) => {
 // Create new task
 router.post("/", async (req, res, next) => {
 	try {
-		// TODO: Validate input
-		const { title, content, status } = req.body;
+		// Validate data
+		const validate = await taskValidate.safeParseAsync(req.body);
+		if (!validate.success) throw new AppError("Missing some fields", 400);
 
-		const task = new Task({
-			title,
-			content,
-			status,
-			userId: req.userId,
-		});
-
+		// Create new task
+		const task = new Task({ ...req.body, userId: req.userId });
 		await task.save();
 
 		res.status(200).json({ message: "Task is created!" });
@@ -51,11 +50,12 @@ router.post("/", async (req, res, next) => {
 // Update task
 router.put("/:id", taskMiddleware, async (req, res, next) => {
 	try {
-		const { title, content, status } = req.body;
-		req.task.title = title;
-		req.task.content = content;
-		req.task.status = status;
-		await req.task.save();
+		// Validate data
+		const validate = await taskValidate.safeParseAsync(req.body);
+		if (!validate.success) throw new AppError("Missing some fields", 400);
+
+		// Update task
+		await Task.updateMany({ _id: req.taskId }, { $set: { ...req.body } });
 
 		res.status(200).json({ message: "Task is updated!" });
 	} catch (error) {
@@ -66,7 +66,7 @@ router.put("/:id", taskMiddleware, async (req, res, next) => {
 // Delete task
 router.delete("/:id", taskMiddleware, async (req, res, next) => {
 	try {
-		await req.task.deleteOne();
+		await Task.findByIdAndDelete({ _id: req.taskId });
 
 		res.status(200).json({ message: "Task is deleted!" });
 	} catch (error) {

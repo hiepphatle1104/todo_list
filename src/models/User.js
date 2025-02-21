@@ -1,5 +1,7 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema, model } from "mongoose";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { AppError } from "../middleware/errorHandler.js";
 
 const userSchema = new Schema({
 	username: {
@@ -18,6 +20,7 @@ const userSchema = new Schema({
 	password: {
 		type: String,
 		required: true,
+		minlength: 6,
 	},
 });
 
@@ -32,6 +35,19 @@ userSchema.pre("save", async function (next) {
 	next();
 });
 
-const User = mongoose.model("User", userSchema);
+// Compare password
+userSchema.methods.comparePassword = async function (password) {
+	const isMatch = await bcrypt.compare(password, this.password);
+	if (!isMatch) throw new AppError("Invalid credentials!", 400);
+};
+
+// Create token
+userSchema.methods.createToken = function () {
+	return jwt.sign({ userId: this._id }, process.env.JWT_SECRET, {
+		expiresIn: "1h",
+	});
+};
+
+const User = model("User", userSchema);
 
 export default User;
