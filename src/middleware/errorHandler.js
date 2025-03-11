@@ -1,15 +1,23 @@
 const errorHandler = (err, req, res, next) => {
-	res.status(err.status || 500).json({
-		success: false,
-		message: err.message || "Internal Server Error",
-	});
+  res.json({
+    success: false,
+    message: err.message || "Internal Server Error",
+    status: err.status || 500,
+  });
 };
 
 class AppError extends Error {
-	constructor(message, status) {
-		super(message);
-		this.status = status;
-	}
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
 }
 
-export { errorHandler, AppError };
+const ErrorHandler = (res, message, status) =>
+  res.json({
+    success: false,
+    message: message || "Internal Server Error",
+    status: status || 500,
+  });
+
+export { errorHandler, AppError, ErrorHandler };
